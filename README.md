@@ -6,7 +6,7 @@ Patterns root files
 
 ./SDP/Window/WindowFactory.h
 
-- Buidler pattern\n
+- Buidler pattern
 
 ./SDP/Window/WidgetBuilder.h
 
