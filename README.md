@@ -7,16 +7,20 @@ Patterns root files
 ./SDP/Window/WindowFactory.h
 
 - Buidler pattern\n
+
 ./SDP/Window/WidgetBuilder.h
 
 - Observer pattern
+
 ./SDP/Window/Console
 ./SDP/Observer/IObserver.h and ISubject.h
 
 - Command pattern
+
 ./SDP/Window/GUI/Button (action_)
 
 - Strategy pattern
+
 Behaviours in ./SDP/Engine/Engine.h
 Interface ./SDP/Compute/ICompute.h
 Concrete behaviour ./SDP/Compute/CppCompute.h and OpclCompute.h
