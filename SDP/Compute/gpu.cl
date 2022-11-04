@@ -240,7 +240,7 @@ kernel void fill(global unsigned int* bitmap, size_t size, size_t thread_count)
 #define OBJ_COORD_COUNT 3
 union vertex
 {
-    float coordinates[OBJ_COORD_COUNT];
+    double coordinates[OBJ_COORD_COUNT];
 };
 //
 // Brezenham algorithm for line
@@ -324,7 +324,7 @@ kernel void blitLine(
 #define MATRIX_SIZE 4
 kernel void matrix(
 	global union vertex* vertex,
-	global float*        matrix,
+	global double*       matrix,
 	global union vertex* result,
 	size_t               vsize,
 	int                  offset,
@@ -335,7 +335,7 @@ kernel void matrix(
 
 	for (int j = 0; j < MATRIX_SIZE - 1; j++)
 	{
-		float summarazing = 0;
+		double summarazing = 0;
 		for (int k = 0; k < MATRIX_SIZE - 1; k++)
 		{
 			summarazing += vertex[gId].coordinates[k] * matrix[j * MATRIX_SIZE + k];
@@ -343,15 +343,28 @@ kernel void matrix(
 		summarazing += matrix[j * MATRIX_SIZE + MATRIX_SIZE - 1];
 		result[gId].coordinates[j] = summarazing;
 	}
+	
+	if (divZ == 5) {
+		double w =  vertex[gId].coordinates[0] * matrix[3 * MATRIX_SIZE + 0];
+		w += vertex[gId].coordinates[1] * matrix[3 * MATRIX_SIZE + 1];
+		w += vertex[gId].coordinates[2] * matrix[3 * MATRIX_SIZE + 2];
+		//printf("%f, %f", matrix[3 * MATRIX_SIZE + 2], vertex[gId].coordinates[2]);
+		result[gId].coordinates[0] /= w;
+		result[gId].coordinates[1] /= w;
+		result[gId].coordinates[2] /= w;
 
-	if (divZ == 5)
-		for (int k = 0; k < 2; k++) {
-			if (result[gId].coordinates[2] != 0)
-				result[gId].coordinates[k] /= result[gId].coordinates[2];
-		}
+		//printf("(%f, %f, %f) - %d w = %f", result[gId].coordinates[0], result[gId].coordinates[1], result[gId].coordinates[2], gId, w);
 
+		//for (int k = 0; k < 2; k++)
+		//{
+		//	if (result[gId].coordinates[2] != 0) {
+		//		result[gId].coordinates[k] = result[gId].coordinates[2];
+		//	}
+		//}
 	}
+
 	barrier(CLK_GLOBAL_MEM_FENCE);
+	}
 }
 
 

@@ -7,6 +7,7 @@
 #include <vector>
 #include <stdio.h>
 #include "ICompute.h"
+#include "ComputeMatrix.h"
 #include "../Window/Constants.h"
 
 #define METHODS_PAINT_CL   {"fill", "mandelbrotSet", "conwayGoL"}
@@ -14,7 +15,13 @@
 
 using namespace strings;
 
-class OpclCompute : public ICompute
+#define OBJ_COORD_COUNT 3
+union vertex
+{
+	double coordinates[OBJ_COORD_COUNT];
+};
+
+class OpclCompute : public ICompute, public ComputeMatrix
 {
 public:
 	OpclCompute() {
@@ -36,6 +43,39 @@ public:
 		timer--;
 	}
 
+	void multiply(std::vector<std::vector<double>>& matrix, std::vector<std::vector<double>>& vertices, char mode)
+	{
+		std::vector<vertex> v(vertices.size(), vertex{});
+		std::vector<double> m(4 * matrix.size(), 0);
+
+		for (int i = 0; i < vertices.size(); i++)
+		{
+			v[i].coordinates[0] = vertices[i][0];
+			v[i].coordinates[1] = vertices[i][1];
+			v[i].coordinates[2] = vertices[i][2];
+		}
+		for (int i = 0; i < matrix.size(); i++)
+		{
+			m[i * matrix.size() + 0] = matrix[i][0];
+			m[i * matrix.size() + 1] = matrix[i][1];
+			m[i * matrix.size() + 2] = matrix[i][2];
+			m[i * matrix.size() + 3] = matrix[i][3];
+		}
+
+		if (mode == 'd')
+			execute(m, v, 5);
+		else
+			execute(m, v, 0);
+
+		// delete this!!!
+		for (int i = 0; i < vertices.size(); i++)
+		{
+			vertices[i][0] = v[i].coordinates[0];
+			vertices[i][1] = v[i].coordinates[1];
+			vertices[i][2] = v[i].coordinates[2];
+		}
+	}
+
 	std::string getInfo()
 	{
 		return info_;
@@ -48,17 +88,57 @@ private:
 		std::vector<cl::Device> devices;
 	};
 
+	void execute(std::vector<double>& matrix, std::vector<vertex>& vertices, int mode)
+	{
+		if (!active_)
+			return;
+
+		active_ = false;
+
+		// !3!
+		int vsize = vertices.size() * 3 * sizeof(double);
+		int msize = matrix.size() * sizeof(double);
+		std::vector<vertex> temp = vertices;
+
+		cl::Buffer VERTICES(context_, CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR, vsize, vertices.data());
+		cl::Buffer VERTEXESRESULT(context_, CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, vsize, temp.data());
+		cl::Buffer MATRIX(context_, CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR, msize, matrix.data());
+
+		kernels_[3].setArg(0, VERTICES);
+		kernels_[3].setArg(1, MATRIX);
+		kernels_[3].setArg(2, VERTEXESRESULT);
+		kernels_[3].setArg(3, vertices.size());
+		kernels_[3].setArg(4, 8);
+		kernels_[3].setArg(5, mode);
+
+		cl::Event mevent;
+		queue_.enqueueNDRangeKernel(kernels_[3], cl::NullRange, cl::NDRange(1024), cl::NullRange, nullptr, &mevent);
+		std::vector<cl::Event> iteration_events{ mevent };
+		cl::Event task_event;
+		queue_.enqueueTask(kernels_[3], &iteration_events, &task_event);
+		task_event.wait();
+		//delete this!!!
+		vertices = temp;
+
+		active_ = true;
+	}
+
 	void execute(unsigned long** bitmap, int bitmapSize)
 	{
- 		if (active_) {
-			int size = bitmapSize * sizeof((*bitmap)[0]);
-			cl::Buffer BITMAP(context_, CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR, size, (*bitmap));
-			kernels_[4].setArg(0, BITMAP);
-			kernels_[4].setArg(1, (size_t)bitmapSize);
-			kernels_[4].setArg(2, (size_t)threadCount);
-			queue_.enqueueNDRangeKernel(kernels_[4], cl::NullRange, cl::NDRange(threadCount), cl::NullRange);
-			queue_.finish();
-		}
+		if (!active_)
+			return;
+
+		active_ = false;
+
+		int size = bitmapSize * sizeof((*bitmap)[0]);
+		cl::Buffer BITMAP(context_, CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR, size, (*bitmap));
+		kernels_[4].setArg(0, BITMAP);
+		kernels_[4].setArg(1, (size_t)bitmapSize);
+		kernels_[4].setArg(2, (size_t)threadCount);
+		queue_.enqueueNDRangeKernel(kernels_[4], cl::NullRange, cl::NDRange(threadCount), cl::NullRange);
+		queue_.finish();
+
+		active_ = true;
 	}
 
 	int timer = 10;
