@@ -2,10 +2,10 @@
 
 Patterns root files
 
-- Factory pattern
+- Factory pattern\n
 ./SDP/Window/WindowFactory.h
 
-- Buidler pattern
+- Buidler pattern\n
 ./SDP/Window/WidgetBuilder.h
 
 - Observer pattern
