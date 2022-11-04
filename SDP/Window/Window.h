@@ -10,7 +10,7 @@ public:
 		w = new WidgetBuilder();
 		bitmapInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
 		bitmapInfo.bmiHeader.biWidth = 640;
-		bitmapInfo.bmiHeader.biHeight = 480;
+		bitmapInfo.bmiHeader.biHeight = -480;
 		bitmapInfo.bmiHeader.biPlanes = 1;
 		bitmapInfo.bmiHeader.biBitCount = 32;
 		bitmapInfo.bmiHeader.biCompression = BI_RGB;
@@ -101,6 +101,8 @@ public:
 			}
 		}
 
+		case WM_ERASEBKGND:
+			break;
 		case WM_PAINT:
 			paint();
 			break;
@@ -114,19 +116,19 @@ public:
 		}
 		return NULL;//w->broadcast();
 	}
-	void foo() {
-		std::cout << "FOO\n";
+	int foo() {
+		return 5;
 	}
 	void buildCommonButton() {
 		w->buildButton(std::bind(&Window::paint, this), "button1", "widget1");
 	}
-	void buildCommonButton(std::function<void()> action) {
-		w->buildButton(action, "button1", "widget1");
+	void buildCommonButton(std::function<void()> action, std::string name) {
+		w->buildButton(action, name, "widget1");
 	}
 
 	void buildCommonText() {
 		w->createWidget(&handle_, "widget1");
-		w->buildText("text1", "widget1");
+		w->buildText("text1", "widget1", std::bind(&Window::foo, this));
 	}
 	WidgetBuilder* w;
 

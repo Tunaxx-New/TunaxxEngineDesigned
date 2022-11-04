@@ -6,7 +6,7 @@ using namespace strings;
 class Text : public UI
 {
 public:
-	Text(HWND* parent) : ::UI(beforeConstruct())
+	Text(HWND* parent, std::string& text) : text_(text), ::UI(beforeConstruct())
 	{
 		whandle_ = ::CreateWindow(
 			TEXT("EDIT"),
@@ -26,16 +26,21 @@ public:
 		SetParent(handle_, *parent);
 
 		rollbackBaseWindowClass();
-	}
 
-	void set(const std::string& text) {
-		text_ = text;
+		apply();
 		update();
 	}
 
-	void append(const std::string& text) {
-		text_ += text + separator_;
-		update();
+	void apply() {
+		if (!isChange_) {
+			int size;
+			int length = (int)text_.length() + 1;
+			size = MultiByteToWideChar(CP_ACP, 0, text_.c_str(), length, 0, 0);
+			wchar_t* buf = new wchar_t[size];
+			MultiByteToWideChar(CP_ACP, 0, text_.c_str(), length, buf, size);
+			vtext_ = buf;
+		}
+		isChange_ = true;
 	}
 
 	std::string get() {
@@ -43,21 +48,30 @@ public:
 	}
 
 	void update() {
-		std::wstring stemp = std::wstring(text_.begin(), text_.end());
-		LPCWSTR sw = stemp.c_str();
-		SetWindowText(whandle_, sw);
+		if (isChange_)
+			SetWindowTextW(whandle_, vtext_);
+		isChange_ = false;
+	}
+
+	void scrollDown()
+	{
 		SendMessageA(whandle_, EM_SETSEL, 0, -1);
 		SendMessageA(whandle_, EM_SETSEL, -1, -1);
 		SendMessageA(whandle_, EM_SCROLLCARET, 0, 0);
 	}
 
-private:
+protected:
 	std::string separator_ = NEW_LINE;
+
+private:
+	bool isChange_ = false;
+	LPCWSTR vtext_;
+	std::string& text_;
 
 	int beforeConstruct()
 	{
 		//WindowClassTemp.exStyle = WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW;
-		WindowClassTemp.height = 200;
+		WindowClassTemp.height = 60;
 		return 0;
 	}
 
@@ -65,8 +79,8 @@ private:
 	{
 		switch (message)
 		{
-
 		case WM_PAINT:
+			update();
 			InvalidateRect(handle, NULL, TRUE);
 
 		default:

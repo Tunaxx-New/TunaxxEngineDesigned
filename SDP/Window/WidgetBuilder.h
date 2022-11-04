@@ -2,6 +2,9 @@
 #include "Widget.h"
 #include "GUI/Button.h"
 #include "GUI/Text.h"
+#include "GUI/DependText.h"
+#include "GUI/StoredText.h"
+#include "GUI/DebugText.h"
 
 
 class WidgetBuilder
@@ -21,12 +24,12 @@ public:
 			return;
 		}
 
-		WindowClassTemp.y = widget->getCount() * 200;
+		WindowClassTemp.y = widget->getCount() * 60;
 		Button* button = new Button(widget->getHandle(), action);
 		widget->appendUI(button, name);
 	}
 
-	void buildText(const std::string& name, const std::string& widgetName) {
+	void buildText(const std::string& name, const std::string& widgetName, std::function<int()> getter) {
 		Widget* widget = widgets_[widgetName];
 
 		if (!widget) {
@@ -34,11 +37,17 @@ public:
 			return;
 		}
 
-		WindowClassTemp.y = widget->getCount() * 200;
-		Text* text = new Text(widget->getHandle());
-		text->set("UGU");
-		text->append("SYA");
+		WindowClassTemp.y = widget->getCount() * 60;
+		DebugText<int>* text = new DebugText<int>(widget->getHandle(), getter);
+		//text->set(str);
+		//text->append("SYA");
 		widget->appendUI(text, name);
+		widget->updateAllUI("");
+		text->update();
+	}
+
+	void updateAll(std::string name) {
+		widgets_[name]->updateAllUI("");
 	}
 
 	void print(const std::string& message, char flag, const std::string& name, const std::string& widgetName) {
@@ -49,7 +58,7 @@ public:
 			return;
 		}
 
-		Text* text = (Text*)widget->getUI(name);
+		StoredText* text = (StoredText*)widget->getUI(name);
 		if (flag == 'a')
 			text->append(message);
 		else

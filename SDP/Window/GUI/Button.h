@@ -13,8 +13,8 @@ public:
 			WS_CHILD | WS_VISIBLE | WS_BORDER,
 			0,
 			WindowClassTemp.y,
-			100,
-			200,
+			120,
+			30,
 			handle_,
 			NULL,
 			NULL,
@@ -28,12 +28,14 @@ public:
 		rollbackBaseWindowClass();
 	}
 private:
+	void update() {}
+
 	std::function<void()> action_;
 
 	int beforeConstruct()
 	{
 		//WindowClassTemp.exStyle = WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW;
-		WindowClassTemp.height = 200;
+		WindowClassTemp.height = 60;
 		return 0;
 	}
 

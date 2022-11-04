@@ -29,6 +29,16 @@ public:
 		uis_[name] = ui;
 	}
 
+	void updateAllUI(std::string name)
+	{
+		for (auto i = uis_.begin(); i != uis_.end(); ++i)
+		{
+			if (i->second == nullptr)
+				break;
+			i->second->update();
+		}
+	}
+
 	UI* getUI(std::string name)
 	{
 		return uis_[name];
@@ -42,7 +52,8 @@ private:
 	int beforeConstruct()
 	{
 		WindowClassTemp.style = WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW;
-		WindowClassTemp.width = 300;
+		WindowClassTemp.width = 640;
+		WindowClassTemp.height = 480;
 		return 0;
 	}
 

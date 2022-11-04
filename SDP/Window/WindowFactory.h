@@ -30,7 +30,9 @@ public:
 		rollbackBaseWindowClass();
 		console->setTitle(name);
 		console->buildCommonText();
-		console->buildCommonButton(std::bind(&IEngineManipulation::changeCompute, engine_));
+		console->buildCommonButton(std::bind(&IEngineManipulation::changeCompute, engine_), "b1");
+		console->buildCommonButton(std::bind(&IEngineManipulation::scaleUp, engine_), "b2");
+		console->buildCommonButton(std::bind(&IEngineManipulation::scaleDown, engine_), "b3");
 
 		windows_[name] = (BaseWindow*)console;
 	}

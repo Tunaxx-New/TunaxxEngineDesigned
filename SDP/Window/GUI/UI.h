@@ -5,7 +5,7 @@ class UI : public BaseWindow
 {
 public:
 	UI(int) : ::BaseWindow() {}
+	virtual void update() = 0;
 protected:
-	std::string text_;
 	HWND whandle_;
 };
