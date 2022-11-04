@@ -2,7 +2,8 @@
 
 Patterns root files
 
-- Factory pattern\n
+- Factory pattern
+
 ./SDP/Window/WindowFactory.h
 
 - Buidler pattern\n
